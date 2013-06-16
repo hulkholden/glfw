@@ -660,6 +660,16 @@ static int translateKey(unsigned int key)
 
 @end
 
+static void initializeForegroundApp(void)
+{
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
+    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+
+    // Having the app in front of the terminal window is also generally
+    // handy.  There is an NSApplication API to do this, but...
+    SetFrontProcess(&psn);
+}
+
 #if defined(_GLFW_USE_MENUBAR)
 
 // Try to figure out what the calling application is called
@@ -689,12 +699,7 @@ static NSString* findAppName(void)
     }
 
     // If we get here, the application is unbundled
-    ProcessSerialNumber psn = { 0, kCurrentProcess };
-    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-
-    // Having the app in front of the terminal window is also generally
-    // handy.  There is an NSApplication API to do this, but...
-    SetFrontProcess(&psn);
+    initializeForegroundApp();
 
     char** progname = _NSGetProgname();
     if (progname && *progname)
@@ -786,6 +791,8 @@ static GLboolean initializeAppKit(void)
     // finishLaunching below, in order to properly emulate the behavior
     // of NSApplicationMain
     createMenuBar();
+#else
+    initializeForegroundApp();
 #endif
 
     [NSApp finishLaunching];
